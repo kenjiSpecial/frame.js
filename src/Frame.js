@@ -3,11 +3,9 @@
  */
 
 var FRAME = {
-
 	VERSION: 4,
 
 	Player: function () {
-
 		var audio = null;
 
 		var isPlaying = false;
@@ -22,81 +20,71 @@ var FRAME = {
 				return isPlaying;
 			},
 			get currentTime() {
-				if ( audio ) return audio.currentTime;
+				if (audio) return audio.currentTime;
 				return currentTime;
 			},
-			set currentTime( value ) {
-				if ( audio ) audio.currentTime = value;
+			set currentTime(value) {
+				if (audio) audio.currentTime = value;
 				currentTime = value;
 			},
 			get playbackRate() {
-				if ( audio ) return audio.playbackRate;
+				if (audio) return audio.playbackRate;
 				return playbackRate;
 			},
-			set playbackRate( value ) {
+			set playbackRate(value) {
 				playbackRate = value;
-				if ( audio ) audio.playbackRate = value;
+				if (audio) audio.playbackRate = value;
 			},
 			getAudio: function () {
 				return audio;
 			},
-			setAudio: function ( value ) {
-				if ( audio ) audio.pause();
-				if ( value ) {
+			setAudio: function (value) {
+				if (audio) audio.pause();
+				if (value) {
 					value.currentTime = currentTime;
-					if ( isPlaying ) value.play();
+					if (isPlaying) value.play();
 				}
 				audio = value;
 			},
 			getLoop: function () {
 				return loop;
 			},
-			setLoop: function ( value ) {
+			setLoop: function (value) {
 				loop = value;
 			},
 			play: function () {
-				if ( audio ) audio.play();
+				if (audio) audio.play();
 				isPlaying = true;
 			},
 			pause: function () {
-				if ( audio ) audio.pause();
+				if (audio) audio.pause();
 				isPlaying = false;
 			},
-			tick: function ( delta ) {
-				if ( audio ) {
+			tick: function (delta) {
+				if (audio) {
 					currentTime = audio.currentTime;
-				} else if ( isPlaying ) {
-					currentTime += ( delta / 1000 ) * playbackRate;
+				} else if (isPlaying) {
+					currentTime += (delta / 1000) * playbackRate;
 				}
-				if ( loop ) {
-					if ( currentTime > loop[ 1 ] ) currentTime = loop[ 0 ];
+				if (loop) {
+					if (currentTime > loop[1]) currentTime = loop[0];
 				}
-			}
-
-		}
-
+			},
+		};
 	},
 
 	Resources: function () {
-
 		var resources = {};
 
 		return {
-
-			get: function ( name ) {
-
-				return resources[ name ];
-
+			get: function (name) {
+				return resources[name];
 			},
 
-			set: function ( name, resource ) {
-
-				resources[ name ] = resource;
-
-			}
-
-		}
-
+			set: function (name, resource) {
+				resources[name] = resource;
+			},
+		};
 	},
 
 	//
@@ -180,83 +168,79 @@ var FRAME = {
 	*/
 
 	Parameters: {
-
-		Boolean: function ( name, value ) {
+		Boolean: function (name, value) {
 			this.name = name;
 			this.value = value !== undefined ? value : true;
 		},
 
-		Color: function ( name, value ) {
+		Color: function (name, value) {
 			this.name = name;
 			this.value = value !== undefined ? value : 0xffffff;
 		},
 
-		Float: function ( name, value, min, max ) {
+		Float: function (name, value, min, max) {
 			this.name = name;
 			this.value = value || 0.0;
-			this.min = min !== undefined ? min : - Infinity;
+			this.min = min !== undefined ? min : -Infinity;
 			this.max = max !== undefined ? max : Infinity;
 		},
 
-		Integer: function ( name, value, min, max ) {
+		Integer: function (name, value, min, max) {
 			this.name = name;
 			this.value = value || 0;
-			this.min = min !== undefined ? min : - Infinity;
+			this.min = min !== undefined ? min : -Infinity;
 			this.max = max !== undefined ? max : Infinity;
 		},
 
-		String: function ( name, value ) {
+		String: function (name, value) {
 			this.name = name;
 			this.value = value !== undefined ? value : '';
 		},
 
-		Vector2: function ( name, value ) {
+		Vector2: function (name, value) {
 			this.name = name;
-			this.value = value !== undefined ? value : [ 0, 0 ];
+			this.value = value !== undefined ? value : [0, 0];
 		},
 
-		Vector3: function ( name, value ) {
+		Vector3: function (name, value) {
 			this.name = name;
-			this.value = value !== undefined ? value : [ 0, 0, 0 ];
-		}
-
+			this.value = value !== undefined ? value : [0, 0, 0];
+		},
 	},
 
-	Effect: function ( name, source ) {
-
+	Effect: function (name, source) {
 		this.name = name;
-		this.source = source || 'var parameters = {\n\tvalue: new FRAME.Parameters.Float( \'Value\', 1.0 )\n};\n\nfunction start(){}\n\nfunction end(){}\n\nfunction update( progress ){}';
+		this.source =
+			source ||
+			"var parameters = {\n\tvalue: new FRAME.Parameters.Float( 'Value', 1.0 )\n};\n\nfunction start(){}\n\nfunction end(){}\n\nfunction update( progress ){}";
 		this.program = null;
-		this.compile = function ( resources, player ) {
-
-			this.program = ( new Function( 'resources, player, parameters, start, end, update', this.source + '\nreturn { parameters: parameters, start: start, end: end, update: update };' ) )( resources, player );
-
+		this.compile = function (resources, player) {
+			this.program = new Function(
+				'resources, player, a, parameters, start, end, update',
+				this.source +
+					'\nreturn { parameters: parameters, start: start, end: end, update: update };'
+			)(resources, player);
+			// console.log(this.program);
 		};
-
 	},
 
-	Animation: function () {
-
+	Animation: (function () {
 		var id = 0;
 
-		return function ( name, start, end, layer, effect, enabled ) {
+		return function (name, start, end, layer, effect, enabled) {
+			if (enabled === undefined) enabled = true; // TODO remove this
 
-			if ( enabled === undefined ) enabled = true; // TODO remove this
-
-			this.id = id ++;
+			this.id = id++;
 			this.name = name;
 			this.start = start;
 			this.end = end;
 			this.layer = layer;
 			this.effect = effect;
 			this.enabled = enabled;
-
 		};
-
-	}(),
+	})(),
 
 	Timeline: function () {
-
 		var includes = [];
 		var effects = [];
 
@@ -265,253 +249,195 @@ var FRAME = {
 
 		var active = [];
 
-		var next = 0, prevtime = 0;
+		var next = 0,
+			prevtime = 0;
 
-		function layerSort( a, b ) { return a.layer - b.layer; }
-		function startSort( a, b ) { return a.start === b.start ? layerSort( a, b ) : a.start - b.start; }
+		function layerSort(a, b) {
+			return a.layer - b.layer;
+		}
+		function startSort(a, b) {
+			return a.start === b.start ? layerSort(a, b) : a.start - b.start;
+		}
 
-		function loadFile( url, onLoad ) {
-
+		function loadFile(url, onLoad) {
 			var request = new XMLHttpRequest();
-			request.open( 'GET', url, true );
-			request.addEventListener( 'load', function ( event ) {
-
-				onLoad( event.target.response );
-
-			} );
-			request.send( null );
-
+			request.open('GET', url, true);
+			request.addEventListener('load', function (event) {
+				onLoad(event.target.response);
+			});
+			request.send(null);
 		}
 
 		return {
-
 			animations: animations,
 			curves: curves,
 
-			load: function ( url, onLoad ) {
-
+			load: function (url, onLoad) {
 				var scope = this;
 
-				loadFile( url, function ( text ) {
-
-					scope.parse( JSON.parse( text ), onLoad );
-
-				} );
-
+				loadFile(url, function (text) {
+					scope.parse(JSON.parse(text), onLoad);
+				});
 			},
 
-			loadLibraries: function ( libraries, onLoad ) {
-
+			loadLibraries: function (libraries, onLoad) {
 				var count = 0;
 
 				function loadNext() {
-
-					if ( count === libraries.length ) {
-
+					if (count === libraries.length) {
 						onLoad();
 						return;
-
 					}
 
-					var url = libraries[ count ++ ];
+					var url = libraries[count++];
 
-					loadFile( url, function ( content ) {
-
-						var script = document.createElement( 'script' );
+					loadFile(url, function (content) {
+						var script = document.createElement('script');
 						script.id = 'library-' + count;
 						script.textContent = '( function () { ' + content + '} )()';
-						document.head.appendChild( script );
+						document.head.appendChild(script);
 
 						loadNext();
-
-					} );
-
-
+					});
 				}
 
 				loadNext();
-
 			},
 
-			parse: function ( json, onLoad ) {
-
+			parse: function (json, onLoad) {
 				var scope = this;
 
 				var libraries = json.libraries || [];
 
-				this.loadLibraries( libraries, function () {
-
+				this.loadLibraries(libraries, function () {
 					// Includes
 
-					for ( var i = 0; i < json.includes.length; i ++ ) {
+					for (var i = 0; i < json.includes.length; i++) {
+						var data = json.includes[i];
+						var name = data[0];
+						var source = data[1];
 
-						var data = json.includes[ i ];
-						var name = data[ 0 ];
-						var source = data[ 1 ];
+						if (Array.isArray(source)) source = source.join('\n');
 
-						if ( Array.isArray( source ) ) source = source.join( '\n' );
-
-						includes.push( new FRAME.Effect( name, source ) );
-
+						includes.push(new FRAME.Effect(name, source));
 					}
 
 					// Effects
 
-					for ( var i = 0; i < json.effects.length; i ++ ) {
+					for (var i = 0; i < json.effects.length; i++) {
+						var data = json.effects[i];
 
-						var data = json.effects[ i ];
+						var name = data[0];
+						var source = data[1];
 
-						var name = data[ 0 ];
-						var source = data[ 1 ];
+						if (Array.isArray(source)) source = source.join('\n');
 
-						if ( Array.isArray( source ) ) source = source.join( '\n' );
-
-						effects.push( new FRAME.Effect( name, source ) );
-
+						effects.push(new FRAME.Effect(name, source));
 					}
 
-					for ( var i = 0; i < json.animations.length; i ++ ) {
-
-						var data = json.animations[ i ];
+					for (var i = 0; i < json.animations.length; i++) {
+						var data = json.animations[i];
 
 						var animation = new FRAME.Animation(
-							data[ 0 ],
-							data[ 1 ],
-							data[ 2 ],
-							data[ 3 ],
-							effects[ data[ 4 ] ],
-							data[ 5 ]
+							data[0],
+							data[1],
+							data[2],
+							data[3],
+							effects[data[4]],
+							data[5]
 						);
 
-						animations.push( animation );
-
+						animations.push(animation);
 					}
 
 					scope.sort();
 
-					if ( onLoad ) onLoad();
-
-				} );
-
+					if (onLoad) onLoad();
+				});
 			},
 
-			compile: function ( resources, player ) {
-
+			compile: function (resources, player) {
 				var animations = this.animations;
 
-				for ( var i = 0, l = includes.length; i < l; i++ ) {
+				for (var i = 0, l = includes.length; i < l; i++) {
+					var include = includes[i];
 
-					var include = includes[ i ];
-
-					if ( include.program === null ) {
-
-						include.compile( resources, player );
-
+					if (include.program === null) {
+						include.compile(resources, player);
 					}
-
 				}
 
-				for ( var i = 0, l = animations.length; i < l; i ++ ) {
+				for (var i = 0, l = animations.length; i < l; i++) {
+					var animation = animations[i];
 
-					var animation = animations[ i ];
-
-					if ( animation.effect.program === null ) {
-
-						animation.effect.compile( resources, player );
-
+					if (animation.effect.program === null) {
+						animation.effect.compile(resources, player);
 					}
-
 				}
-
 			},
 
-			add: function ( animation ) {
-
-				animations.push( animation );
+			add: function (animation) {
+				animations.push(animation);
 				this.sort();
-
 			},
 
-			remove: function ( animation ) {
+			remove: function (animation) {
+				var i = animations.indexOf(animation);
 
-				var i = animations.indexOf( animation );
-
-				if ( i !== -1 ) {
-
-					animations.splice( i, 1 );
-
+				if (i !== -1) {
+					animations.splice(i, 1);
 				}
-
 			},
 
 			sort: function () {
-
-				animations.sort( startSort );
-
+				animations.sort(startSort);
 			},
 
-			update: function ( time ) {
-
-				if ( prevtime > time ) {
-
+			update: function (time) {
+				if (prevtime > time) {
 					this.reset();
-
 				}
 
 				var animation;
 
 				// add to active
 
-				while ( animations[ next ] ) {
+				while (animations[next]) {
+					animation = animations[next];
 
-					animation = animations[ next ];
+					if (animation.enabled) {
+						if (animation.start > time) break;
 
-					if ( animation.enabled ) {
-
-						if ( animation.start > time ) break;
-
-						if ( animation.end > time ) {
-
-							if ( animation.effect.program.start ) {
-
+						if (animation.end > time) {
+							if (animation.effect.program.start) {
 								animation.effect.program.start();
-
 							}
 
-							active.push( animation );
-
+							active.push(animation);
 						}
-
 					}
 
-					next ++;
-
+					next++;
 				}
 
 				// remove from active
 
 				var i = 0;
 
-				while ( active[ i ] ) {
+				while (active[i]) {
+					animation = active[i];
 
-					animation = active[ i ];
-
-					if ( animation.start > time || animation.end < time ) {
-
-						if ( animation.effect.program.end ) {
-
+					if (animation.start > time || animation.end < time) {
+						if (animation.effect.program.end) {
 							animation.effect.program.end();
-
 						}
 
-						active.splice( i, 1 );
+						active.splice(i, 1);
 
 						continue;
-
 					}
 
-					i ++;
-
+					i++;
 				}
 
 				/*
@@ -526,63 +452,48 @@ var FRAME = {
 
 				// render
 
-				active.sort( layerSort );
+				active.sort(layerSort);
 
-				for ( var i = 0, l = active.length; i < l; i ++ ) {
-
-					animation = active[ i ];
-					animation.effect.program.update( ( time - animation.start ) / ( animation.end - animation.start ), time - prevtime );
-
+				for (var i = 0, l = active.length; i < l; i++) {
+					animation = active[i];
+					animation.effect.program.update(
+						(time - animation.start) / (animation.end - animation.start),
+						time - prevtime
+					);
 				}
 
 				prevtime = time;
-
 			},
 
 			reset: function () {
-
-				while ( active.length ) {
-
+				while (active.length) {
 					var animation = active.pop();
 					var program = animation.effect.program;
 
-					if ( program.end ) program.end();
-
+					if (program.end) program.end();
 				}
 
 				next = 0;
-
-			}
-
+			},
 		};
-
 	},
 
 	// DEPRECATED
 
 	getDOM: function () {
-
-		console.error( 'FRAME.getDOM() has been removed.' );
-		return document.createElement( 'div' );
-
+		console.error('FRAME.getDOM() has been removed.');
+		return document.createElement('div');
 	},
 
-	setDOM: function ( value ) {
-
-		console.error( 'FRAME.setDOM() has been removed.' );
-
+	setDOM: function (value) {
+		console.error('FRAME.setDOM() has been removed.');
 	},
 
 	addResource: function () {
-
-		console.error( 'FRAME.addResource() has been removed.' );
-
+		console.error('FRAME.addResource() has been removed.');
 	},
 
 	getResource: function () {
-
-		console.error( 'FRAME.getResource() has been removed.' );
-
-	}
-
+		console.error('FRAME.getResource() has been removed.');
+	},
 };

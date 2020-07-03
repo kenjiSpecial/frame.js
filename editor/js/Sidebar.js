@@ -3,81 +3,69 @@
  */
 
 import { SidebarAnimation } from './SidebarAnimation.js';
-import { SidebarProject } from './SidebarProject.js'
-import { SidebarRender } from './SidebarRender.js'
+import { SidebarProject } from './SidebarProject.js';
+import { SidebarRender } from './SidebarRender.js';
 
-function Sidebar( editor ) {
-
+function Sidebar(editor) {
 	var container = new UI.Panel();
-	container.setId( 'sidebar' );
+	container.setId('sidebar');
 
 	//
 
-	var animationTab = new UI.Text( 'ANIMATION' ).onClick( onClick );
-	var projectTab = new UI.Text( 'PROJECT' ).onClick( onClick );
-	var renderTab = new UI.Text( 'RENDER' ).onClick( onClick );
+	var animationTab = new UI.Text('ANIMATION').onClick(onClick);
+	var projectTab = new UI.Text('PROJECT').onClick(onClick);
+	var renderTab = new UI.Text('RENDER').onClick(onClick);
 
 	var tabs = new UI.Div();
-	tabs.setId( 'tabs' );
-	tabs.add( animationTab, projectTab, renderTab );
-	container.add( tabs );
+	tabs.setId('tabs');
+	tabs.add(animationTab, projectTab, renderTab);
+	container.add(tabs);
 
-	function onClick( event ) {
-
-		select( event.target.textContent );
-
+	function onClick(event) {
+		select(event.target.textContent);
 	}
 
 	//
 
-	var animation = new UI.Span().add(
-		new SidebarAnimation( editor )
-	);
-	container.add( animation );
+	var animation = new UI.Span().add(new SidebarAnimation(editor));
+	container.add(animation);
 
-	var project = new UI.Span().add(
-		new SidebarProject( editor )
-	);
-	container.add( project );
+	var project = new UI.Span().add(new SidebarProject(editor));
+	container.add(project);
 
-	var render = new UI.Span().add(
-		new SidebarRender( editor )
-	);
-	container.add( render );
+	var render = new UI.Span().add(new SidebarRender(editor));
+	container.add(render);
 
 	//
 
-	function select( section ) {
+	function select(section) {
+		animationTab.setClass('');
+		projectTab.setClass('');
+		renderTab.setClass('');
 
-		animationTab.setClass( '' );
-		projectTab.setClass( '' );
-		renderTab.setClass( '' );
+		animation.setDisplay('none');
+		project.setDisplay('none');
+		render.setDisplay('none');
 
-		animation.setDisplay( 'none' );
-		project.setDisplay( 'none' );
-		render.setDisplay( 'none' );
-
-		switch ( section ) {
+		switch (section) {
 			case 'ANIMATION':
-				animationTab.setClass( 'selected' );
-				animation.setDisplay( '' );
+				animationTab.setClass('selected');
+				animation.setDisplay('');
 				break;
 			case 'PROJECT':
-				projectTab.setClass( 'selected' );
-				project.setDisplay( '' );
+				projectTab.setClass('selected');
+				project.setDisplay('');
 				break;
 			case 'RENDER':
-				renderTab.setClass( 'selected' );
-				render.setDisplay( '' );
+				renderTab.setClass('selected');
+				render.setDisplay('');
 				break;
 		}
-
 	}
 
-	select( 'ANIMATION' );
+	select('PROJECT');
 
 	return container;
-
 }
 
 export { Sidebar };

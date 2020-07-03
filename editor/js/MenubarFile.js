@@ -75,6 +75,18 @@ function MenubarFile(editor) {
 		link.setAttribute('download', filename);
 	}
 
+	// read
+
+	// write
+
+	var option = new UI.Panel();
+	option.setClass('option');
+	option.setTextContent('Read');
+	option.onClick(Write);
+	options.add(option);
+
+	function Write() {}
+
 	return container;
 }
 

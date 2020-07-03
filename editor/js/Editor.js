@@ -5,12 +5,13 @@
 import { Config } from './Config.js';
 
 function Editor() {
-
 	var Signal = signals.Signal;
 
 	this.signals = {
-
 		editorCleared: new Signal(),
+
+		// project jso
+		projectJsonUpdated: new Signal(),
 
 		// libraries
 
@@ -56,8 +57,7 @@ function Editor() {
 		timeChanged: new Signal(),
 		timelineScaled: new Signal(),
 
-		windowResized: new Signal()
-
+		windowResized: new Signal(),
 	};
 
 	this.config = new Config();
@@ -67,6 +67,7 @@ function Editor() {
 
 	this.duration = 500;
 
+	this.projectJsonPath = '';
 	this.libraries = [];
 	this.includes = [];
 	this.effects = [];
@@ -78,483 +79,371 @@ function Editor() {
 
 	var scope = this;
 
-	this.signals.animationModified.add( function () {
-
+	this.signals.animationModified.add(function () {
 		scope.timeline.reset();
 		scope.timeline.sort();
 
 		try {
-
-			scope.timeline.update( scope.player.currentTime );
-
-		} catch ( e ) {
-
-			console.error( e );
-
+			scope.timeline.update(scope.player.currentTime);
+		} catch (e) {
+			console.error(e);
 		}
+	});
 
-	} );
-
-	this.signals.effectCompiled.add( function () {
-
+	this.signals.effectCompiled.add(function () {
 		try {
-
-			scope.timeline.update( scope.player.currentTime );
-
-		} catch ( e ) {
-
-			console.error( e );
-
+			scope.timeline.update(scope.player.currentTime);
+		} catch (e) {
+			console.error(e);
 		}
+	});
 
-	} );
-
-	this.signals.timeChanged.add( function () {
-
+	this.signals.timeChanged.add(function () {
 		try {
-
-			scope.timeline.update( scope.player.currentTime );
-
-		} catch ( e ) {
-
-			console.error( e );
-
+			scope.timeline.update(scope.player.currentTime);
+		} catch (e) {
+			console.error(e);
 		}
+	});
 
-	} );
+	this.signals.projectJsonUpdated.add(function (value) {
+		console.log(value);
+	});
 
 	// Animate
 
 	var prevTime = 0;
 
-	function animate( time ) {
+	function animate(time) {
+		scope.player.tick(time - prevTime);
 
-		scope.player.tick( time - prevTime );
-
-		if ( scope.player.isPlaying ) {
-
-			scope.signals.timeChanged.dispatch( scope.player.currentTime );
-
+		if (scope.player.isPlaying) {
+			scope.signals.timeChanged.dispatch(scope.player.currentTime);
 		}
 
 		prevTime = time;
 
-		requestAnimationFrame( animate );
-
+		requestAnimationFrame(animate);
 	}
 
-	requestAnimationFrame( animate );
-
-};
+	requestAnimationFrame(animate);
+}
 
 Editor.prototype = {
-
 	play: function () {
-
 		this.player.play();
-		this.signals.playingChanged.dispatch( true );
-
+		this.signals.playingChanged.dispatch(true);
 	},
 
 	stop: function () {
-
 		this.player.pause();
-		this.signals.playingChanged.dispatch( false );
-
+		this.signals.playingChanged.dispatch(false);
 	},
 
 	speedUp: function () {
-
 		this.player.playbackRate += 0.1;
-		this.signals.playbackRateChanged.dispatch( this.player.playbackRate );
-
+		this.signals.playbackRateChanged.dispatch(this.player.playbackRate);
 	},
 
 	speedDown: function () {
-
 		this.player.playbackRate -= 0.1;
-		this.signals.playbackRateChanged.dispatch( this.player.playbackRate );
-
+		this.signals.playbackRateChanged.dispatch(this.player.playbackRate);
 	},
 
-	setTime: function ( time ) {
-
+	setTime: function (time) {
 		// location.hash = time;
 
-		this.player.currentTime = Math.max( 0, time );
-		this.signals.timeChanged.dispatch( this.player.currentTime );
+		this.player.currentTime = Math.max(0, time);
+		this.signals.timeChanged.dispatch(this.player.currentTime);
+	},
 
+	// project json
+	updateProjectJson: function (value) {
+		this.projectJsonPath = value;
+		this.signals.projectJsonUpdated.dispatch(this.projectJsonPath);
 	},
 
 	// libraries
 
-	addLibrary: function ( url, content ) {
-
-		var script = document.createElement( 'script' );
+	addLibrary: function (url, content) {
+		var script = document.createElement('script');
 		script.id = 'library-' + this.libraries.length;
 		script.textContent = content;
-		document.head.appendChild( script );
+		document.head.appendChild(script);
 
-		this.libraries.push( url );
+		this.libraries.push(url);
 		this.signals.libraryAdded.dispatch();
-
 	},
 
 	// includes
 
-	addInclude: function ( name, source ) {
-
+	addInclude: function (name, source) {
 		try {
-			new Function( 'resources', source )( this.resources );
-		} catch ( e ) {
-			console.error( e );
+			new Function('resources', source)(this.resources);
+		} catch (e) {
+			console.error(e);
 		}
 
-		this.includes.push( { name: name, source: source } );
+		this.includes.push({ name: name, source: source });
 		this.signals.includeAdded.dispatch();
-
 	},
 
-	removeInclude: function ( include ) {
+	removeInclude: function (include) {
+		var index = this.includes.indexOf(include);
 
-		var index = this.includes.indexOf( include );
-
-		this.includes.splice( index, 1 );
+		this.includes.splice(index, 1);
 		this.signals.includeRemoved.dispatch();
-
 	},
 
-	selectInclude: function ( include ) {
-
-		this.signals.includeSelected.dispatch( include );
-
+	selectInclude: function (include) {
+		this.signals.includeSelected.dispatch(include);
 	},
 
 	reloadIncludes: function () {
-
 		var includes = this.includes;
 
 		this.signals.includesCleared.dispatch();
 
-		for ( var i = 0; i < includes.length; i ++ ) {
-
-			var include = includes[ i ];
+		for (var i = 0; i < includes.length; i++) {
+			var include = includes[i];
 
 			try {
-				new Function( 'resources', include.source )( this.resources );
-			} catch ( e ) {
-				console.error( e );
+				new Function('resources', include.source)(this.resources);
+			} catch (e) {
+				console.error(e);
 			}
-
 		}
-
 	},
 
 	// effects
 
-	addEffect: function ( effect ) {
-
-		this.effects.push( effect );
-		this.signals.effectAdded.dispatch( effect );
-
+	addEffect: function (effect) {
+		this.effects.push(effect);
+		this.signals.effectAdded.dispatch(effect);
 	},
 
-	selectEffect: function ( effect ) {
-
-		this.signals.effectSelected.dispatch( effect );
-
+	selectEffect: function (effect) {
+		this.signals.effectSelected.dispatch(effect);
 	},
 
-	removeEffect: function ( effect ) {
+	removeEffect: function (effect) {
+		var index = this.effects.indexOf(effect);
 
-		var index = this.effects.indexOf( effect );
-
-		if ( index >= 0 ) {
-
-			this.effects.splice( index, 1 );
-			this.signals.effectRemoved.dispatch( effect );
-
+		if (index >= 0) {
+			this.effects.splice(index, 1);
+			this.signals.effectRemoved.dispatch(effect);
 		}
-
 	},
 
-	compileEffect: function ( effect ) {
-
+	compileEffect: function (effect) {
 		try {
-
-			effect.compile( this.resources, this.player );
-
-		} catch ( e ) {
-
-			console.error( e );
-
+			effect.compile(this.resources, this.player);
+		} catch (e) {
+			console.error(e);
 		}
 
-		this.signals.effectCompiled.dispatch( effect );
-
+		this.signals.effectCompiled.dispatch(effect);
 	},
 
 	// Remove any effects that are not bound to any animations.
 
 	cleanEffects: function () {
-
 		var scope = this;
-		var effects = this.effects.slice( 0 );
+		var effects = this.effects.slice(0);
 		var animations = this.timeline.animations;
 
-		effects.forEach( function ( effect, i ) {
-
+		effects.forEach(function (effect, i) {
 			var bound = false;
 
-			for ( var j = 0; j < animations.length; j++ ) {
+			for (var j = 0; j < animations.length; j++) {
+				var animation = animations[j];
 
-				var animation = animations[ j ];
-
-				if ( animation.effect === effect ) {
-
+				if (animation.effect === effect) {
 					bound = true;
 					break;
-
 				}
-
 			}
 
-			if ( bound === false ) {
-
-				scope.removeEffect( effect );
-
+			if (bound === false) {
+				scope.removeEffect(effect);
 			}
-
-		} );
-
+		});
 	},
 
 	// animations
 
-	addAnimation: function ( animation ) {
-
+	addAnimation: function (animation) {
 		var effect = animation.effect;
 
-		if ( effect.program === null ) {
-
-			this.compileEffect( effect );
-
+		if (effect.program === null) {
+			this.compileEffect(effect);
 		}
 
-		this.timeline.add( animation );
-		this.signals.animationAdded.dispatch( animation );
-
+		this.timeline.add(animation);
+		this.signals.animationAdded.dispatch(animation);
 	},
 
-	selectAnimation: function ( animation ) {
-
-		if ( this.selected === animation ) return;
+	selectAnimation: function (animation) {
+		if (this.selected === animation) return;
 
 		this.selected = animation;
-		this.signals.animationSelected.dispatch( animation );
-
+		this.signals.animationSelected.dispatch(animation);
 	},
 
-	removeAnimation: function ( animation ) {
-
-		this.timeline.remove( animation );
-		this.signals.animationRemoved.dispatch( animation );
-
+	removeAnimation: function (animation) {
+		this.timeline.remove(animation);
+		this.signals.animationRemoved.dispatch(animation);
 	},
 
-	addCurve: function ( curve ) {
-
-		this.timeline.curves.push( curve );
-		this.signals.curveAdded.dispatch( curve );
-
+	addCurve: function (curve) {
+		this.timeline.curves.push(curve);
+		this.signals.curveAdded.dispatch(curve);
 	},
 
 	clear: function () {
-
 		this.libraries = [];
 		this.includes = [];
 		this.effects = [];
 
-		while ( this.timeline.animations.length > 0 ) {
-
-			this.removeAnimation( this.timeline.animations[ 0 ] );
-
+		while (this.timeline.animations.length > 0) {
+			this.removeAnimation(this.timeline.animations[0]);
 		}
 
 		this.signals.editorCleared.dispatch();
-
 	},
 
-	fromJSON: function ( json ) {
-
-		function loadFile( url, onLoad ) {
-
+	fromJSON: function (json) {
+		function loadFile(url, onLoad) {
 			var request = new XMLHttpRequest();
-			request.open( 'GET', url, true );
-			request.addEventListener( 'load', function ( event ) {
-
-				onLoad( event.target.response );
-
-			} );
-			request.send( null );
-
+			request.open('GET', url, true);
+			request.addEventListener('load', function (event) {
+				onLoad(event.target.response);
+			});
+			request.send(null);
 		}
 
-		function loadLibraries( libraries, onLoad ) {
-
+		function loadLibraries(libraries, onLoad) {
 			var count = 0;
 
 			function loadNext() {
-
-				if ( count === libraries.length ) {
-
+				if (count === libraries.length) {
 					onLoad();
 					return;
-
 				}
 
-				var url = libraries[ count ++ ];
+				var url = libraries[count++];
 
-				loadFile( url, function ( content ) {
-
-					scope.addLibrary( url, content );
+				loadFile(url, function (content) {
+					scope.addLibrary(url, content);
 					loadNext();
-
-				} );
-
+				});
 			}
 
 			loadNext();
-
 		}
 
 		var scope = this;
 
+		console.log(json);
 		var libraries = json.libraries || [];
 
-		loadLibraries( libraries, function () {
+		console.log(libraries);
 
+		// initialize editor
+		loadLibraries(libraries, function () {
 			var includes = json.includes;
 
-			for ( var i = 0, l = includes.length; i < l; i ++ ) {
+			for (var i = 0, l = includes.length; i < l; i++) {
+				var data = includes[i];
 
-				var data = includes[ i ];
+				var name = data[0];
+				var source = data[1];
 
-				var name = data[ 0 ];
-				var source = data[ 1 ];
+				if (Array.isArray(source)) source = source.join('\n');
 
-				if ( Array.isArray( source ) ) source = source.join( '\n' );
-
-				scope.addInclude( name, source );
-
+				scope.addInclude(name, source);
 			}
 
 			var effects = json.effects;
 
-			for ( var i = 0, l = effects.length; i < l; i ++ ) {
+			for (var i = 0, l = effects.length; i < l; i++) {
+				var data = effects[i];
 
-				var data = effects[ i ];
+				var name = data[0];
+				var source = data[1];
 
-				var name = data[ 0 ];
-				var source = data[ 1 ];
+				if (Array.isArray(source)) source = source.join('\n');
 
-				if ( Array.isArray( source ) ) source = source.join( '\n' );
-
-				scope.addEffect( new FRAME.Effect( name, source ) );
-
+				scope.addEffect(new FRAME.Effect(name, source));
 			}
 
 			var animations = json.animations;
 
-			for ( var i = 0, l = animations.length; i < l; i ++ ) {
-
-				var data = animations[ i ];
+			for (var i = 0, l = animations.length; i < l; i++) {
+				var data = animations[i];
 
 				var animation = new FRAME.Animation(
-					data[ 0 ],
-					data[ 1 ],
-					data[ 2 ],
-					data[ 3 ],
-					scope.effects[ data[ 4 ] ],
-					data[ 5 ]
+					data[0],
+					data[1],
+					data[2],
+					data[3],
+					scope.effects[data[4]],
+					data[5]
 				);
 
-				scope.addAnimation( animation );
-
+				scope.addAnimation(animation);
 			}
 
-			scope.setTime( 0 );
+			const projectJsonPath = json.projectJsonPath;
+			scope.updateProjectJson(projectJsonPath);
 
-		} );
-
+			scope.setTime(0);
+		});
 	},
 
 	toJSON: function () {
-
 		var json = {
-			"config": {},
-			"libraries": this.libraries.slice(),
-			"includes": [],
-			"effects": [],
+			projectJsonPath: '',
+			config: {},
+			libraries: this.libraries.slice(),
+			includes: [],
+			effects: [],
 			// "curves": [],
-			"animations": []
+			animations: [],
 		};
 
-		/*
-		// curves
-
-		var curves = this.timeline.curves;
-
-		for ( var i = 0, l = curves.length; i < l; i ++ ) {
-
-			var curve = curves[ i ];
-
-			if ( curve instanceof FRAME.Curves.Linear ) {
-
-				json.curves.push( [ 'linear', curve.points ] );
-
-			}
-
-		}
-		*/
-
-		// includes
+		json.projectJsonPath = this.projectJsonPath;
 
 		var includes = this.includes;
 
-		for ( var i = 0, l = includes.length; i < l; i ++ ) {
-
-			var include = includes[ i ];
+		for (var i = 0, l = includes.length; i < l; i++) {
+			var include = includes[i];
 
 			var name = include.name;
 			var source = include.source;
 
-			json.includes.push( [ name, source.split( '\n' ) ] );
-
+			json.includes.push([name, source.split('\n')]);
 		}
 
 		// effects
 
 		var effects = this.effects;
 
-		for ( var i = 0, l = effects.length; i < l; i ++ ) {
-
-			var effect = effects[ i ];
+		for (var i = 0, l = effects.length; i < l; i++) {
+			var effect = effects[i];
 
 			var name = effect.name;
 			var source = effect.source;
 
-			json.effects.push( [ name, source.split( '\n' ) ] );
-
+			json.effects.push([name, source.split('\n')]);
 		}
 
 		// animations
 
 		var animations = this.timeline.animations;
 
-		for ( var i = 0, l = animations.length; i < l; i ++ ) {
-
-			var animation = animations[ i ];
+		for (var i = 0, l = animations.length; i < l; i++) {
+			var animation = animations[i];
 			var effect = animation.effect;
 
 			/*
@@ -567,21 +456,18 @@ Editor.prototype = {
 			}
 			*/
 
-			json.animations.push( [
+			json.animations.push([
 				animation.name,
 				animation.start,
 				animation.end,
 				animation.layer,
-				this.effects.indexOf( animation.effect ),
-				animation.enabled
-			] );
-
+				this.effects.indexOf(animation.effect),
+				animation.enabled,
+			]);
 		}
 
 		return json;
-
-	}
-
-}
+	},
+};
 
 export { Editor };
