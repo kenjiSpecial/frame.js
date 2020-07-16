@@ -1,0 +1,22 @@
+{
+	"name": "frame-custom.js",
+	"version": "1.0.0",
+	"main": "node/index.js",
+	"repository": "https://github.com/kenjiSpecial/frame.js.git",
+	"author": "kenji <k.saito.1985@gmail.com>",
+	"license": "MIT",
+	"scripts": {
+		"start": "nodemon node/node.js",
+		"objToJs": "node node/obj-to-js.js",
+		"local": "http-server ."
+	},
+	"devDependencies": {
+		"commander": "^5.1.0",
+		"cors": "^2.8.5",
+		"express": "^4.17.1",
+		"http-server": "^0.12.3",
+		"jsonfile": "^6.0.1",
+		"nodemon": "^2.0.4",
+		"yargs": "^15.4.0"
+	}
+}

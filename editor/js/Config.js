@@ -9,7 +9,6 @@ function Config() {
 
 	if (window.localStorage[name] !== undefined) {
 		var data = JSON.parse(window.localStorage[name]);
-		console.log(data);
 
 		for (var key in data) {
 			storage[key] = data[key];
@@ -30,7 +29,7 @@ function Config() {
 
 			window.localStorage[name] = JSON.stringify(storage);
 
-			console.log(name);
+			// console.log(name);
 			console.log(
 				'[' + /\d\d\:\d\d\:\d\d/.exec(new Date())[0] + ']',
 				'Saved config to LocalStorage.'
@@ -40,6 +39,8 @@ function Config() {
 		clear: function () {
 			delete window.localStorage[name];
 		},
+
+		POST_URL: 'http://localhost:3000/write',
 	};
 }
 

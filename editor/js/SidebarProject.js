@@ -7,13 +7,17 @@ function SidebarProject(editor) {
 
 	var container = new UI.Panel();
 	container.setId('project');
-	var projectTextJsonPath = '';
+	var projectJsonName = '';
 
 	// project_JSON
 	var projectInputContainer = new UI.Div();
-	container.add(new UI.Text('Project_JSON').setTextTransform('uppercase'));
+	container.add(new UI.Text('Project_Name').setTextTransform('uppercase'));
 	container.add(new UI.Break(), new UI.Break());
 	var projectInput = new UI.Input().setWidth('130px');
+	projectInput.onChange(function () {
+		editor.projectJsonName = projectInput.getValue();
+	});
+
 	container.add(projectInputContainer);
 	projectInputContainer.add(projectInput);
 
@@ -151,7 +155,7 @@ function SidebarProject(editor) {
 	}
 
 	function updateProjectJson(value) {
-		projectTextJsonPath = value;
+		projectJsonName = value;
 		projectInput.setValue(value);
 	}
 

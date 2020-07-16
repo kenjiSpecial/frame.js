@@ -1,0 +1,153 @@
+{
+  "projectJsonName": "prject",
+  "config": {},
+  "libraries": [
+    "../examples/js/libs/three.min.js",
+    "../examples/js/libs/mesh.js",
+    "../examples/js/libs/OBJLoader.js"
+  ],
+  "includes": [
+    [
+      "Renderer",
+      [
+        "var dom = resources.get( 'dom' );",
+        "",
+        "var renderer = new THREE.WebGLRenderer( { preserveDrawingBuffer: true } );",
+        "renderer.autoClear = false;",
+        "renderer.setPixelRatio( window.devicePixelRatio );",
+        "renderer.setSize( dom.clientWidth, dom.clientHeight );",
+        "dom.appendChild( renderer.domElement );",
+        "",
+        "window.addEventListener( 'resize', function () {",
+        "\t",
+        "\trenderer.setSize( dom.clientWidth, dom.clientHeight );",
+        "\t",
+        "} );",
+        "",
+        "resources.set( 'renderer', renderer );"
+      ]
+    ]
+  ],
+  "effects": [
+    [
+      "Clear",
+      [
+        "var parameters = {",
+        "\tcolor: new FRAME.Parameters.Color( 'Color', 0xffffff )",
+        "};",
+        "",
+        "var renderer = resources.get( 'renderer' );",
+        "",
+        "function start() {",
+        "",
+        "\trenderer.setClearColor( parameters.color.value );",
+        "",
+        "}",
+        "",
+        "function update( progress ) {",
+        "",
+        "\trenderer.clear();",
+        "",
+        "}"
+      ]
+    ],
+    [
+      "Cube",
+      [
+        "var dom = resources.get( 'dom' );",
+        "",
+        "var renderer = resources.get( 'renderer' );",
+        "",
+        "var camera = new THREE.PerspectiveCamera( 50, dom.clientWidth / dom.clientHeight, 0.1, 5000 );",
+        "camera.position.z = 1000;",
+        "camera.position.y = 300;",
+        "camera.lookAt(new THREE.Vector3());",
+        "",
+        "window.addEventListener( 'resize', function () {",
+        "\tcamera.aspect = dom.clientWidth / dom.clientHeight;",
+        "\tcamera.updateProjectionMatrix();",
+        "} );",
+        "",
+        "",
+        "var objloader = new THREE.OBJLoader();",
+        "var mesh = objloader.parse(meshDataSample0);",
+        "console.log(mesh);",
+        "var scene = new THREE.Scene();",
+        "scene.add( mesh );",
+        "",
+        "function start(){}",
+        "",
+        "function update( progress ){",
+        "",
+        "\tcamera.position.z = 400;",
+        "\tcamera.position.y = 300;",
+        "\tcamera.lookAt(new THREE.Vector3());",
+        "\tmesh.rotation.y = progress * Math.PI * 2;",
+        "\trenderer.render( scene, camera );",
+        "",
+        "}"
+      ]
+    ],
+    [
+      "Fade Out",
+      [
+        "var parameters = {",
+        "\tcolor:   new FRAME.Parameters.Color( 'Color', 0xffffff ),",
+        "\topacity: new FRAME.Parameters.Float( 'Opacity', 1, 0, 1 )",
+        "};",
+        "",
+        "var renderer = resources.get( 'renderer' );",
+        "",
+        "var camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );",
+        "var scene = new THREE.Scene();",
+        "var mesh = new THREE.Mesh(",
+        "\tnew THREE.PlaneGeometry( 2, 2 ),",
+        "\tnew THREE.MeshBasicMaterial( { transparent: true } )",
+        ");",
+        "scene.add( mesh );",
+        "",
+        "function start(){}",
+        "",
+        "function update( progress ){",
+        "",
+        "\tmesh.material.color.setHex( parameters.color.value );",
+        "\tmesh.material.opacity = parameters.opacity.value * ( 1 - progress );",
+        "\trenderer.render( scene, camera );",
+        "",
+        "}"
+      ]
+    ],
+    [
+      "Effect",
+      [
+        "var parameters = {",
+        "\tvalue: new FRAME.Parameters.Float( 'Value', 1.0 )",
+        "};",
+        "",
+        "function start(){}",
+        "",
+        "function end(){}",
+        "",
+        "function update( progress ){}"
+      ]
+    ]
+  ],
+  "animations": [
+    [
+      "",
+      0,
+      16,
+      0,
+      0,
+      true
+    ],
+    [
+      "",
+      0,
+      16,
+      1,
+      1,
+      true
+    ]
+  ]
+}

@@ -81,11 +81,22 @@ function MenubarFile(editor) {
 
 	var option = new UI.Panel();
 	option.setClass('option');
-	option.setTextContent('Read');
+	option.setTextContent('Write');
 	option.onClick(Write);
 	options.add(option);
 
-	function Write() {}
+	function Write() {
+		axios
+			.post(editor.config.POST_URL, editor.toJSON())
+			.then(function (response) {
+				console.log(response);
+			})
+			.catch(function (err) {});
+		editor.config.setKey('state', JSON.stringify(editor.toJSON()));
+	}
+
+	// var Menubar = new UI.Panel();
+	// option.setClass('option');
 
 	return container;
 }

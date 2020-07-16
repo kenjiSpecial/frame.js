@@ -67,7 +67,7 @@ function Editor() {
 
 	this.duration = 500;
 
-	this.projectJsonPath = '';
+	this.projectJsonName = '';
 	this.libraries = [];
 	this.includes = [];
 	this.effects = [];
@@ -107,7 +107,7 @@ function Editor() {
 	});
 
 	this.signals.projectJsonUpdated.add(function (value) {
-		console.log(value);
+		// console.log(value);
 	});
 
 	// Animate
@@ -159,8 +159,8 @@ Editor.prototype = {
 
 	// project json
 	updateProjectJson: function (value) {
-		this.projectJsonPath = value;
-		this.signals.projectJsonUpdated.dispatch(this.projectJsonPath);
+		this.projectJsonName = value;
+		this.signals.projectJsonUpdated.dispatch(this.projectJsonName);
 	},
 
 	// libraries
@@ -344,10 +344,7 @@ Editor.prototype = {
 
 		var scope = this;
 
-		console.log(json);
 		var libraries = json.libraries || [];
-
-		console.log(libraries);
 
 		// initialize editor
 		loadLibraries(libraries, function () {
@@ -394,8 +391,8 @@ Editor.prototype = {
 				scope.addAnimation(animation);
 			}
 
-			const projectJsonPath = json.projectJsonPath;
-			scope.updateProjectJson(projectJsonPath);
+			const projectJsonName = json.projectJsonName;
+			scope.updateProjectJson(projectJsonName);
 
 			scope.setTime(0);
 		});
@@ -403,7 +400,7 @@ Editor.prototype = {
 
 	toJSON: function () {
 		var json = {
-			projectJsonPath: '',
+			projectJsonName: '',
 			config: {},
 			libraries: this.libraries.slice(),
 			includes: [],
@@ -412,7 +409,7 @@ Editor.prototype = {
 			animations: [],
 		};
 
-		json.projectJsonPath = this.projectJsonPath;
+		json.projectJsonName = this.projectJsonName;
 
 		var includes = this.includes;
 
