@@ -62,7 +62,6 @@ function SidebarRender( editor ) {
 		const element = renderer.domElement;
 		const audio = player.getAudio();
 
-		//
 
 		const { createFFmpeg } = FFmpeg;
 		const ffmpeg = createFFmpeg( { log: true } );
